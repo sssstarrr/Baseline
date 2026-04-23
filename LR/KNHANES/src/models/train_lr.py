@@ -45,10 +45,12 @@ TARGET = 'target_oa_kh'
 
 
 def main() -> None:
+    """训练并评估用于膝骨关节炎预测的逻辑回归基线模型。"""
     if not DATASET_CSV.exists():
         raise SystemExit(f'Missing dataset: {DATASET_CSV}. Run make_knhanes_dataset.py first.')
 
     data = pd.read_csv(DATASET_CSV)
+    # 仅保留建模输入与目标列，并兼容缺失的特征列。
     keep_cols = ['id', TARGET] + [c for c in NUMERIC_FEATURES + CATEGORICAL_FEATURES if c in data.columns]
     data = data[keep_cols].copy()
     data = data.dropna(subset=[TARGET])
@@ -94,6 +96,7 @@ def main() -> None:
         ('model', LogisticRegression(max_iter=5000, solver='lbfgs', random_state=42)),
     ])
 
+    # 以交叉验证 AUC 为目标调优正则化强度与类别权重。
     grid = GridSearchCV(
         estimator=pipeline,
         param_grid={
@@ -119,6 +122,7 @@ def main() -> None:
     print('F1:', round(f1_score(y_test, y_pred), 4))
     print(classification_report(y_test, y_pred, digits=4))
 
+    # 保存测试集逐样本预测结果和最优模型，便于复用。
     pred_df = X_test[['id']].copy()
     pred_df['y_true'] = y_test.to_numpy()
     pred_df['y_prob'] = y_prob

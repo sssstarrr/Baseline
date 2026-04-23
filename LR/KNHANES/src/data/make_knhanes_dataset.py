@@ -12,6 +12,7 @@ if str(PROJECT_ROOT) not in sys.path:
 
 from src.common.paths import RAW_DATA_DIR, PROCESSED_DATA_DIR
 
+# 收集年度全量调查文件（2010-2012），并兼容大小写文件名。
 ALL_FILES = sorted({*RAW_DATA_DIR.glob('HN*_all.sav'), *RAW_DATA_DIR.glob('hn*_all.sav')}, key=lambda p: p.name.lower())
 OUTPUT_CSV = PROCESSED_DATA_DIR / 'knhanes_2010_2012_knee_oa_dataset.csv'
 
@@ -36,10 +37,12 @@ FEATURE_COLUMNS = [
     'LQ_VAS',
 ]
 
+# KNHANES 中用于表示拒答/未知的哨兵值。
 MISSING_CODES = {8, 9, 88, 99, 888, 999, 8888, 9999}
 
 
 def clean_missing_codes(df: pd.DataFrame) -> pd.DataFrame:
+    """将 KNHANES 数值缺失编码统一替换为 NA。"""
     result = df.copy()
     numeric_cols = result.select_dtypes(include=['number']).columns
     for col in numeric_cols:
@@ -48,6 +51,7 @@ def clean_missing_codes(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def read_yearly_file(path: Path) -> pd.DataFrame:
+    """读取单年 SAV 文件，并仅保留建模所需字段。"""
     _, meta = pyreadstat.read_sav(path, metadataonly=True)
     usecols = [col for col in FEATURE_COLUMNS if col in meta.column_names]
     df, _ = pyreadstat.read_sav(path, usecols=usecols)
@@ -68,12 +72,14 @@ def read_yearly_file(path: Path) -> pd.DataFrame:
 
 
 def main() -> None:
+    """构建合并后的 KNHANES 数据集，并生成 LR 训练目标变量。"""
     if not ALL_FILES:
         raise SystemExit(f'No HN*_all.sav files found under {RAW_DATA_DIR}')
 
     frames = [read_yearly_file(path) for path in ALL_FILES]
     data = pd.concat(frames, ignore_index=True, sort=False)
 
+    # 个别文件导入后仍包含 VAS 的占位极值编码。
     if 'LQ_VAS' in data.columns:
         data.loc[data['LQ_VAS'].isin([888, 999]), 'LQ_VAS'] = pd.NA
 

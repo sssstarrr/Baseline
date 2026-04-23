@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import re
 from pathlib import Path
 import sys
 
@@ -13,6 +12,7 @@ if str(PROJECT_ROOT) not in sys.path:
 
 from src.common.paths import RAW_DATA_DIR
 
+# 收集年度原始文件，兼容文件名大小写差异。
 ALL_FILES = sorted({*RAW_DATA_DIR.glob('HN*_all.sav'), *RAW_DATA_DIR.glob('hn*_all.sav')}, key=lambda p: p.name.lower())
 
 INSPECT_VARS = [
@@ -37,16 +37,19 @@ INSPECT_VARS = [
     'LQ_VAS',
 ]
 
+# KNHANES 中用于表示缺失/未知的特殊数值编码。
 MISSING_CODES = {8, 9, 88, 99, 888, 999, 8888, 9999}
 
 
 def clean_series(series: pd.Series) -> pd.Series:
+    """将 KNHANES 缺失哨兵编码转换为数值列中的 NA。"""
     if pd.api.types.is_numeric_dtype(series):
         return series.mask(series.isin(MISSING_CODES))
     return series
 
 
 def inspect_file(path: Path) -> None:
+    """输出单个 SAV 文件中目标变量的标签和取值分布。"""
     print(f'\n===== {path.name} =====')
     _, meta = pyreadstat.read_sav(path, metadataonly=True)
     available = [col for col in INSPECT_VARS if col in meta.column_names]
