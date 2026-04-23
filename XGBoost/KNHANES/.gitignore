@@ -1,0 +1,25 @@
+# Python cache
+__pycache__/
+*.py[cod]
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# IDE files
+.idea/
+.vscode/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Generated outputs
+outputs/xgboost/*.joblib
+outputs/xgboost/*.csv
+outputs/xgboost/*.json
+outputs/xgboost/*.png
+
+# Optional regenerated processed datasets
+# data/processed/*.csv
