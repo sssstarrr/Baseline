@@ -1,0 +1,27 @@
+# Python cache
+__pycache__/
+*.py[cod]
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# IDE files
+.idea/
+.vscode/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Model outputs and generated predictions
+outputs/lr/*.joblib
+outputs/lr/*.csv
+
+# Optional regenerated processed datasets
+# Uncomment if you do not want to version processed CSV outputs
+# data/processed/*.csv
+
+# Raw source data files
+data/raw/*.sav
